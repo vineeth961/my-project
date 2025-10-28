@@ -1,0 +1,39 @@
+name: Build & Push to ECR
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Log in to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build & Push Backend Image
+      run: |
+        BACKEND_REPO=039612886287.dkr.ecr.ap-south-1.amazonaws.com/backend
+        docker build -t backend-app ./backend
+        docker tag backend-app:latest $BACKEND_REPO:latest
+        docker push $BACKEND_REPO:latest
+
+    - name: Build & Push Frontend Image
+      run: |
+        FRONTEND_REPO=039612886287.dkr.ecr.ap-south-1.amazonaws.com/frontend
+        docker build -t frontend-app ./frontend
+        docker tag frontend-app:latest $FRONTEND_REPO:latest
+        docker push $FRONTEND_REPO:latest
+
